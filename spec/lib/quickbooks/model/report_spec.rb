@@ -27,6 +27,13 @@ describe Quickbooks::Model::Report do
     end
   end
 
+  describe "#columns_information" do
+    it 'returns an array containing items for each <Column>' do
+      report.columns_information.should == [["Account", ""], ["Money", "TOTAL"]]
+      report_with_years.columns_information.should == [["Account",""], ["Money", "Jul 4 - Dec 31, 2013"], ["Money", "Jan - Dec 2014"], ["Money", "Jan 1 - Jun 21, 2015"]]
+    end
+  end
+
   describe "#all_rows" do
     it 'returns a flat array containing all Row and Summary elements from the response xml' do
       report.all_rows.length.should > 1
@@ -44,6 +51,49 @@ describe Quickbooks::Model::Report do
     it 'works with multiple columns' do
       report_with_years.all_rows[3].should == ['Checking', nil, nil, BigDecimal("1201.00")]
       report_with_years.all_rows[4].should == ['Savings', BigDecimal("19.99"), BigDecimal("19.99"), BigDecimal("819.99")]
+    end
+  end
+
+  describe "#all_data" do
+    it 'returns an array of hashes containing all Row and Summary elements from the response xml' do
+      report.all_data.length.should > 1
+      report.all_data.length.should == report.xml.css('Row,Summary').length
+    end
+
+    it 'returns a flat array containing all <Row> and <Summary> elements' do
+      report.all_data[0].should == [{:data=>"ASSETS"},
+                                    {:data=>nil}]
+      report.all_data[1].should == [{:data=>"Current Assets"},
+                                    {:data=>nil}]
+      report.all_data[2].should == [{:data=>"Bank Accounts"},
+                                    {:data=>nil}]
+      report.all_data[3].should == [{:id=>"35",    :data=>"Checking"},
+                                    {:data=>BigDecimal('1201.00')}]
+      report.all_data[4].should == [{:id=>"36",    :data=>"Savings"},
+                                    {:data=>BigDecimal('800.00')}]
+    end
+
+    it 'works with multiple columns' do
+      report_with_years.all_data[0].should == [{:data=>"ASSETS"},
+                                               {:data=>nil},
+                                               {:data=>nil},
+                                               {:data=>nil}]
+      report_with_years.all_data[1].should == [{:data=>"Current Assets"},
+                                               {:data=>nil},
+                                               {:data=>nil},
+                                               {:data=>nil}]
+      report_with_years.all_data[2].should == [{:data=>"Bank Accounts"},
+                                               {:data=>nil},
+                                               {:data=>nil},
+                                               {:data=>nil}]
+      report_with_years.all_data[3].should == [{:id=>"35", :data=>"Checking"},
+                                               {:data=>nil},
+                                               {:data=>nil},
+                                               {:data=>BigDecimal('1201.00')}]
+      report_with_years.all_data[4].should == [{:id=>"36", :data=>"Savings"},
+                                               {:data=>BigDecimal('19.99')},
+                                               {:data=>BigDecimal('19.99')},
+                                               {:data=>BigDecimal('819.99')}]
     end
   end
 
